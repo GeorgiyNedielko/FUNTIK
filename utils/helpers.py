@@ -42,21 +42,21 @@ def resolve_style(
     """
     Превращает INTONATION (0..1) в параметры Piper.
 
-    Возвращает (noise_scale, noise_w_scale) в безопасном диапазоне,
-    чтобы голос не ломался и не «заикался» от экстремальных значений.
+    Держимся близко к дефолтам модели (noise≈0.667, noise_w≈0.8),
+    иначе появляются «вздохи» и деревянный/хриплый звук.
     """
     x: float = clamp(intonation, 0.0, 1.0)
 
-    # Безопасный «приятный» диапазон вокруг дефолтов модели
-    auto_noise: float = 0.55 + x * 0.30   # 0.55 .. 0.85
-    auto_nw: float = 0.65 + x * 0.30      # 0.65 .. 0.95
+    # Близко к inference из .onnx.json: 0.667 / 0.8
+    auto_noise: float = 0.55 + x * 0.20   # 0.55 .. 0.75
+    auto_nw: float = 0.70 + x * 0.15      # 0.70 .. 0.85
 
     final_noise: float = auto_noise if noise_scale is None else float(noise_scale)
     final_nw: float = auto_nw if noise_w_scale is None else float(noise_w_scale)
 
-    # Жёсткий clamp — защита от артефактов (типа noise_w=2)
-    final_noise = clamp(final_noise, 0.20, 1.20)
-    final_nw = clamp(final_nw, 0.30, 1.20)
+    # Жёсткий clamp — защита от вздохов/артефактов
+    final_noise = clamp(final_noise, 0.20, 1.00)
+    final_nw = clamp(final_nw, 0.30, 1.00)
     return final_noise, final_nw
 
 

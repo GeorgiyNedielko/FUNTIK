@@ -28,18 +28,20 @@ def generate(
     output_dir: Path,
     *,
     speech_speed: float = 1.0,
-    intonation: float = 0.55,
+    intonation: float = 0.35,
     noise_scale: float | None = None,
     noise_w_scale: float | None = None,
     volume: float = 1.0,
     normalize_audio: bool = True,
-    pause_sentence: float = 0.35,
+    split_sentences: bool = False,
+    pause_sentence: float = 0.25,
     pause_paragraph: float = 0.70,
 ) -> Path:
     """
     Синтезирует речь и сохраняет wav.
 
-    Текст режется только по предложениям — так нет «заикания».
+    По умолчанию текст озвучивается целиком — так меньше
+    «вздохов» и стыков, чем при нарезке по предложениям.
     """
     model_path: Path = voices_dir / f"{voice}.onnx"
     config_path: Path = voices_dir / f"{voice}.onnx.json"
@@ -78,12 +80,14 @@ def generate(
 
     logger.info("Загрузка модели: %s", model_path)
     logger.info(
-        "Стиль: speed=%.2f | intonation=%.2f → length=%.3f noise=%.3f noise_w=%.3f | volume=%.2f",
+        "Стиль: speed=%.2f | intonation=%.2f → length=%.3f noise=%.3f noise_w=%.3f | "
+        "split=%s | volume=%.2f",
         speech_speed,
         intonation,
         length_scale,
         final_noise,
         final_nw,
+        split_sentences,
         volume,
     )
 
@@ -92,15 +96,20 @@ def generate(
         config_path=str(config_path),
     )
 
-    segments: list[tuple[str, float]] = split_for_pauses(
-        text,
-        pause_sentence=pause_sentence,
-        pause_paragraph=pause_paragraph,
-    )
+    if split_sentences:
+        segments: list[tuple[str, float]] = split_for_pauses(
+            text,
+            pause_sentence=pause_sentence,
+            pause_paragraph=pause_paragraph,
+        )
+    else:
+        # Один проход — самый ровный звук без стыков/вздохов
+        segments = [(text.strip(), 0.0)]
+
     logger.info(
         "Фразы (%d): %s → %s",
         len(segments),
-        [s for s, _ in segments],
+        [s[:40] for s, _ in segments],
         output_path.name,
     )
 
