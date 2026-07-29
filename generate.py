@@ -28,14 +28,34 @@ def main() -> None:
     try:
         if engine == "cartoon":
             from utils.cartoon import generate_cartoon
+            from utils.helpers import cartoon_style, cheer_up_text
+
+            auto_pitch, auto_rate, auto_volume = cartoon_style(
+                config.INTONATION,
+                config.CHEERFULNESS,
+            )
+            pitch: str = config.CARTOON_PITCH or auto_pitch
+            rate: str = config.CARTOON_RATE or auto_rate
+            volume: str = config.CARTOON_VOLUME or auto_volume
+            spoken_text: str = cheer_up_text(text, config.CHEERFULNESS)
+
+            logger.info(
+                "Cartoon: INTONATION=%.2f CHEERFULNESS=%.2f → "
+                "pitch=%s rate=%s volume=%s",
+                config.INTONATION,
+                config.CHEERFULNESS,
+                pitch,
+                rate,
+                volume,
+            )
 
             result = generate_cartoon(
-                text=text,
+                text=spoken_text,
                 output_dir=config.OUTPUT_DIR,
                 voice=config.CARTOON_VOICE,
-                rate=config.CARTOON_RATE,
-                pitch=config.CARTOON_PITCH,
-                volume=config.CARTOON_VOLUME,
+                rate=rate,
+                pitch=pitch,
+                volume=volume,
             )
         elif engine == "piper":
             from utils.download import download_voice
