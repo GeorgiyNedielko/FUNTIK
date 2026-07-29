@@ -16,18 +16,35 @@ pip install -r requirements.txt
 from utils.download import download_voice
 from config import VOICES_DIR
 
-download_voice("de_DE-thorsten-medium", VOICES_DIR)
+download_voice("ru_RU-irina-medium", VOICES_DIR)
 ```
 
 ## Запуск
+
+1. Текст — в `generate.py` (переменная `text`)
+2. Голос, скорость, выразительность, паузы — в `config.py`
+3. Запуск:
 
 ```bash
 python generate.py
 ```
 
-Результат сохраняется в папку `output/` (например, `output/hallo_kinder.wav`).
+Результат сохраняется в папку `output/`.
 
-## Список доступных голосов
+## Параметры озвучки (`config.py`)
+
+| Параметр | Что делает |
+|---|---|
+| `DEFAULT_VOICE` | Голос (язык = язык текста) |
+| `SPEECH_SPEED` | Скорость (`1.0` норма, `>1` быстрее) |
+| `INTONATION` | Интонация / живость (`0.0`…`1.0`) |
+| `VOLUME` | Громкость |
+| `PAUSE_AFTER_SENTENCE` | Пауза после `. ! ?` (сек) |
+| `PAUSE_AFTER_PARAGRAPH` | Пауза между абзацами (сек) |
+
+Подробности — в файле `ИНСТРУКЦИЯ.txt`.
+
+## Список всех голосов
 
 ```python
 from utils.download import list_voices
@@ -40,15 +57,15 @@ for v in list_voices():
 
 ```
 FUNTIK/
-├── generate.py          # Точка входа
-├── config.py            # Пути и настройки
+├── generate.py          # Текст + запуск
+├── config.py            # Голос и параметры озвучки
 ├── requirements.txt
 ├── README.md
 ├── voices/              # Голосовые модели
-├── text/                # Входные тексты
+├── text/
 ├── output/              # Результаты (wav)
 └── utils/
-    ├── download.py      # Скачивание моделей
-    ├── synthesize.py    # Синтез речи
-    └── helpers.py       # Вспомогательные функции
+    ├── download.py
+    ├── synthesize.py
+    └── helpers.py
 ```
