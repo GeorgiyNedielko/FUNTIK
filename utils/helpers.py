@@ -37,44 +37,51 @@ def clamp(value: float, low: float, high: float) -> float:
 def cartoon_style(
     intonation: float,
     cheerfulness: float,
+    *,
+    pitch_min_hz: float = 35.0,
+    pitch_by_intonation_hz: float = 70.0,
+    pitch_by_cheer_hz: float = 40.0,
+    pitch_max_hz: float = 150.0,
+    rate_by_intonation_pct: float = 10.0,
+    rate_by_cheer_pct: float = 20.0,
+    rate_max_pct: float = 40.0,
+    volume_by_cheer_pct: float = 15.0,
+    volume_max_pct: float = 50.0,
 ) -> tuple[str, str, str]:
     """
     INTONATION + CHEERFULNESS → (pitch, rate, volume) для Edge TTS.
-
-    Edge TTS умеет ТОЛЬКО: voice, pitch, rate, volume.
-    Стилей/эмоций (happy/sad) в API нет.
-
-    cheerfulness поднимает тон, темп и громкость → веселее.
+    Все коэффициенты задаются из config.py.
     """
     x: float = clamp(intonation, 0.0, 1.0)
     c: float = clamp(cheerfulness, 0.0, 1.0)
 
-    # pitch: 35..145 Hz (clamp до 150)
-    pitch_hz: int = int(round(35 + x * 70 + c * 40))
-    pitch_hz = int(clamp(float(pitch_hz), 0.0, 150.0))
+    pitch_hz: int = int(
+        round(pitch_min_hz + x * pitch_by_intonation_hz + c * pitch_by_cheer_hz)
+    )
+    pitch_hz = int(clamp(float(pitch_hz), 0.0, pitch_max_hz))
 
-    # rate: 0..30%
-    rate_pct: int = int(round(x * 10 + c * 20))
-    rate_pct = int(clamp(float(rate_pct), 0.0, 40.0))
+    rate_pct: int = int(round(x * rate_by_intonation_pct + c * rate_by_cheer_pct))
+    rate_pct = int(clamp(float(rate_pct), 0.0, rate_max_pct))
 
-    # volume: 0..15%
-    vol_pct: int = int(round(c * 15))
-    vol_pct = int(clamp(float(vol_pct), 0.0, 50.0))
+    vol_pct: int = int(round(c * volume_by_cheer_pct))
+    vol_pct = int(clamp(float(vol_pct), 0.0, volume_max_pct))
 
     return f"+{pitch_hz}Hz", f"+{rate_pct}%", f"+{vol_pct}%"
 
 
-def cheer_up_text(text: str, cheerfulness: float) -> str:
-    """
-    Лёгкая подготовка текста под весёлый тон.
-    При высоком cheerfulness точки в конце предложений → '!'.
-    """
-    if clamp(cheerfulness, 0.0, 1.0) < 0.55:
+def cheer_up_text(
+    text: str,
+    cheerfulness: float,
+    *,
+    enabled: bool = True,
+    threshold: float = 0.55,
+) -> str:
+    """При высоком cheerfulness точки в конце предложений → '!'."""
+    if not enabled:
         return text
-
-    # «.» в конце фразы → «!» (не трогаем … и сокращения внутри)
-    cheered: str = re.sub(r"(?<=\w)\.(?=(\s|$))", "!", text.strip())
-    return cheered
+    if clamp(cheerfulness, 0.0, 1.0) < threshold:
+        return text
+    return re.sub(r"(?<=\w)\.(?=(\s|$))", "!", text.strip())
 
 
 # Совместимость со старым именем
