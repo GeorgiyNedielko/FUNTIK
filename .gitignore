@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Piper models (large binary files)
+voices/*.onnx
+voices/*.onnx.json
+*.onnx
+*.onnx.json
+
+# Generated audio
+output/*.wav
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
